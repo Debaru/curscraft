@@ -1,4 +1,4 @@
-package curscraft
+package parser
 
 import (
 	"net/http"
@@ -32,12 +32,11 @@ func (t *Tag) GetAttr(attrName string) (val string, err error) {
 func GetURL(url string, tag string) []Tag {
 	var tags []Tag // Tag slice
 	resp, err := http.Get(url)
-	defer resp.Body.Close()
-
 	if err == nil {
 		n, _ := html.Parse(resp.Body)
 		parser(n, &tag, &tags)
 	}
+	defer resp.Body.Close()
 	return tags
 }
 
