@@ -21,8 +21,8 @@ DESCRIPTION
 		Check if a new version is available
 	-upgrade
 		Upgrade addons which have a new version available
-	-a, -add <addon URL>
-		Add addon
+	-a, -add <addon URI...>
+		Add addon(s)
 	-r, -remove <addon ID>
 		Remove addon
 
@@ -130,9 +130,8 @@ func main() {
 			fatal(usage)
 		}
 
-		err = addon.Download(adds, os.Args[2])
+		err = addon.Download(adds, os.Args[2:len(os.Args)])
 		utils.Fatal(err)
-		fmt.Println("Addon downloaded.")
 	}
 
 	// Save Addons

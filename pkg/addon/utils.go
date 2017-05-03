@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -181,18 +180,22 @@ func Upgrade(addons *Addons) (int, error) {
 
 // Download download addon with is url
 // and check all new addons
-func Download(addons *Addons, url string) error {
+func Download(addons *Addons, uri []string) error {
 	var a Addon
 
-	sp := strings.Split(os.Args[2], "/")
-	a.ID = sp[len(sp)-1]
-	err := a.download()
-	if err != nil {
-		return err
+	for i := 0; i < len(uri); i++ {
+		url := uri[i]
+		sp := strings.Split(url, "/")
+		a.ID = sp[len(sp)-1]
+		err := a.download()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Addon %s was downloaded.\n", a.ID)
 	}
 
 	// Check Addons
-	err = CheckAddons(addons)
+	err := CheckAddons(addons)
 	if err != nil {
 		return err
 	}
