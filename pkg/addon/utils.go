@@ -76,10 +76,16 @@ func CheckAddons(addons *Addons) error {
 					a.Real = false
 				}
 
-				// Check URL to Curse Web Site to set ID
-				erro = a.setID()
-				if erro != nil {
+				// Proper Name
+				a.setProperName()
+				if len(a.dependencies) > 0 {
 					a.Real = false
+				} else {
+					// Check URL to Curse Web Site to set ID
+					erro = a.setID()
+					if erro != nil {
+						a.Real = false
+					}
 				}
 
 				*addons = append(*addons, a)

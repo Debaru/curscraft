@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/Debaru/curscraft/pkg/parser"
 	"github.com/Debaru/goutils/fileutil"
@@ -31,45 +32,56 @@ type Addon struct {
 	NewVersion    string
 	DirectoryName string
 	Real          bool
+	dependencies  string
 }
 
 func (a *Addon) setID() error {
-	if len(a.ID) == 0 {
-		r := strings.NewReplacer(" ", "-")
-		a.ID = strings.ToLower(r.Replace(a.Name))
+	var altID []string
+	if len(a.ID) > 0 { // String array of alternative ID
+		altID = append(altID, a.ID) // ID found in toc file
+	}
+	altID = append(altID, strings.ToLower(a.DirectoryName)) // Name of addon dir
+
+	// Master Plan, become master-plan
+	r := strings.NewReplacer(" ", "-")
+	altID = append(altID, strings.ToLower(r.Replace(a.Name))) // Name of addon dir
+
+	// BadBoy, become bad-boy
+	str := []string{}
+	for a, e := range []rune(a.Name) {
+		b := unicode.IsUpper(e)
+
+		if b && a > 0 {
+			str = append(str, "-")
+		}
+		str = append(str, string(e))
+
 	}
 
-	url := fmt.Sprintf(CURSE_URL, a.ID)
-	r, err := http.Get(url)
+	title := strings.Join(str, "")
+	altID = append(altID, strings.ToLower(title))
 
-	if err != nil {
-		return err
+	for i := range altID {
+		url := fmt.Sprintf(CURSE_URL, altID[i])
+		r, err := http.Get(url)
+
+		if err != nil {
+			return err
+		}
+
+		if r.StatusCode == 200 {
+			a.ID = altID[i]
+			return nil
+		}
+
 	}
 
-	// If code isn't 200, url must be with FileName
-	if r.StatusCode != 200 {
-		a.ID = strings.ToLower(a.DirectoryName)
-		url = fmt.Sprintf(CURSE_URL, a.ID)
-	}
+	return errors.New("No URL available")
+}
 
-	// Testing with new url
-	r, err = http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	// Addon no existing on Curse Website
-	if r.StatusCode != 200 {
-		return errors.New("No URL available")
-	}
-
-	// No Error Page
-	t := parser.GetURL(url, "h2.text=Error")
-	if len(t) > 0 {
-		return errors.New("Addon URL unreachable")
-	}
-
-	return nil
+func (a *Addon) setProperName() {
+	s := strings.Split(a.Name, "|")
+	a.Name = strings.TrimSpace(s[0])
 }
 
 func (a *Addon) getCurseAddonURL() string {
